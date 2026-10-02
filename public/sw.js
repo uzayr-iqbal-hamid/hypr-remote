@@ -36,6 +36,9 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
+  // The tokenised manifest names a secret in start_url. Caching it by pathname
+  // would hand that secret to the next reader, no-store on the response aside.
+  if (url.search) return;
   // Only the shell. Screenshots, uploads and the socket always go live.
   if (event.request.method !== "GET" || !SHELL.includes(url.pathname)) return;
   event.respondWith(

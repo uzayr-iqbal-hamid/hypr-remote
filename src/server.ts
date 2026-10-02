@@ -13,6 +13,7 @@ import { followNotifications } from "./features/notifications";
 import { captureMonitor, type Quality } from "./features/screen";
 import { saveUpload } from "./features/send";
 import { startStatsSampler } from "./features/stats";
+import { manifestFor } from "./manifest";
 import { lanAddress, loadToken, newToken, publishPairing, tokenMatches } from "./pairing";
 import { loadPreferences, preferences, receiveDir } from "./preferences";
 import { loadScenes, watchScenes } from "./scenes";
@@ -24,6 +25,9 @@ import { version } from "../package.json";
 const HTTP_PORT = Number(process.env.PORT ?? 4000);
 const HTTPS_PORT = Number(process.env.HTTPS_PORT ?? 4443);
 const PUBLIC_DIR = join(import.meta.dir, "..", "public");
+// Served through the handler above rather than as a plain static file, so that
+// start_url can name a paired phone's own token.
+const MANIFEST_FILE = join(PUBLIC_DIR, "manifest.webmanifest");
 const UPLOAD_LIMIT = 512 * 1024 * 1024;
 // Opt back into pairing over plain HTTP even while HTTPS runs.
 const ALLOW_HTTP = process.env.HYPR_REMOTE_ALLOW_HTTP === "1";
@@ -203,6 +207,20 @@ function authorised(request: Request, url?: URL) {
   return deviceFor(url?.searchParams.get("t") ?? request.headers.get("x-token"));
 }
 
+/**
+ * The manifest carries a token in its start_url for a phone that has one, which
+ * is how an installed iOS web app learns it (see manifest.ts). The browser asks
+ * for the manifest itself, without the x-token header, so the token rides in
+ * the query string here. Returns the token the request proved, or null.
+ *
+ * Whether it may be used is decided by manifestFor, which also turns it down
+ * for a plain-HTTP request.
+ */
+function pairedTokenForManifest(url: URL) {
+  const presented = url.searchParams.get("t");
+  return presented && deviceFor(presented) ? presented : null;
+}
+
 // Set once HTTPS is up. From then on the token, and with it typing on this
 // laptop, never crosses plain HTTP, where anyone on the Wi-Fi can read it.
 let httpsRunning = false;
@@ -330,6 +348,20 @@ async function handle(request: Request, server: Server<Phone>): Promise<Response
         "Content-Disposition": 'attachment; filename="hypr-remote-ca.crt"',
       },
     });
+  }
+
+  // The manifest, answered per caller so an installed iOS web app can pair.
+  // Answered before the static handler below, which would return the bare file.
+  if (url.pathname === "/manifest.webmanifest" && request.method === "GET") {
+    const base = await Bun.file(MANIFEST_FILE).json().catch(() => null);
+    const manifest = manifestFor(base, pairedTokenForManifest(url), server.url.protocol === "https:");
+    if (manifest) {
+      return Response.json(manifest, {
+        // A manifest that names a token must never be kept: the next reader
+        // would be handed somebody else's.
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
   }
 
   if (url.pathname === "/config.json") {
