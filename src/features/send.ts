@@ -1,7 +1,7 @@
 import { mkdir, open, rm, type FileHandle } from "node:fs/promises";
 import { basename, extname, join } from "node:path";
 
-import { dispatch } from "../hypr";
+import { dispatch, dsp } from "../hypr";
 import { receiveDir } from "../preferences";
 import { shellQuote } from "../run";
 
@@ -18,7 +18,7 @@ export async function openLink(raw: string): Promise<boolean> {
     return false;
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") return false;
-  await dispatch(`exec xdg-open ${shellQuote(url.href)}`);
+  await dispatch(dsp.exec(`xdg-open ${shellQuote(url.href)}`));
   return true;
 }
 
@@ -94,10 +94,10 @@ export async function openReceived(name: string) {
   const dir = await receiveDir();
   const path = join(dir, basename(name));
   const target = LAUNCHERS.has(extname(path).toLowerCase()) ? dir : path;
-  await dispatch(`exec xdg-open ${shellQuote(target)}`);
+  await dispatch(dsp.exec(`xdg-open ${shellQuote(target)}`));
 }
 
 /** Several files at once open their folder rather than an app each. */
 export async function openDownloads() {
-  await dispatch(`exec xdg-open ${shellQuote(await receiveDir())}`);
+  await dispatch(dsp.exec(`xdg-open ${shellQuote(await receiveDir())}`));
 }

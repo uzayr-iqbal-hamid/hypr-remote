@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { dispatch, hyprJson, type Client, type Monitor } from "../hypr";
+import { dispatch, dsp, hyprJson, type Client, type Monitor } from "../hypr";
 import { installed, run } from "../run";
 
 /* -------------------------------------------------------------------------- */
@@ -160,7 +160,7 @@ async function flush() {
       lastMove = Date.now();
 
       cursor = clampToScreens(cursor.x + dx * speed, cursor.y + dy * speed, screens);
-      await dispatch(`movecursor ${Math.round(cursor.x)} ${Math.round(cursor.y)}`);
+      await dispatch(dsp.moveCursor(Math.round(cursor.x), Math.round(cursor.y)));
     }
   } finally {
     flushing = false;

@@ -30,7 +30,7 @@ import { clickOnScreen } from "./features/screen";
 import { openDownloads, openLink, openReceived } from "./features/send";
 import { quitApp, readTopApps, type TopApp } from "./features/stats";
 import type { DeviceView } from "./devices";
-import { dispatch, hyprJson, type Client } from "./hypr";
+import { dispatch, dsp, hyprJson, type Client } from "./hypr";
 import { Preferences, setPreferences } from "./preferences";
 import { deleteScene, putScene, SceneInput, tapScene, type Scene } from "./scenes";
 
@@ -322,5 +322,5 @@ async function focusApp(names: string[]): Promise<boolean> {
       const name = appName(candidate.class);
       return name !== "" && wanted.some((want) => name === want || name.includes(want) || want.includes(name));
     });
-  return client ? dispatch(`focuswindow address:${client.address}`) : false;
+  return client ? dispatch(dsp.focusWindow(client.address)) : false;
 }

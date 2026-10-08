@@ -1,4 +1,4 @@
-import { dispatch, hyprJson, type Monitor } from "../hypr";
+import { dispatch, dsp, hyprJson, type Monitor } from "../hypr";
 import { run } from "../run";
 import { readInputSupport } from "./input";
 
@@ -51,7 +51,7 @@ export async function clickOnScreen(name: string, x: number, y: number): Promise
   const monitor = (await hyprJson<Monitor[]>("monitors"))?.find((candidate) => candidate.name === name);
   if (!monitor) return "no-monitor";
   const point = layoutPoint(monitor, x, y);
-  await dispatch(`movecursor ${point.x} ${point.y}`);
+  await dispatch(dsp.moveCursor(point.x, point.y));
   await run(["ydotool", "click", "0xC0"]);
   return "ok";
 }
