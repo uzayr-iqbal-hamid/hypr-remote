@@ -2,7 +2,7 @@ import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { CACHE_DIR } from "../env";
-import { dispatch, hyprJson, type Monitor } from "../hypr";
+import { dispatch, dsp, hyprJson, type Monitor } from "../hypr";
 import { installed, read, run } from "../run";
 
 /* -------------------------------------------------------------------------- */
@@ -232,7 +232,7 @@ export async function setNightLight(change: { on: boolean } | { temperature: num
 async function ensureHyprsunset(): Promise<boolean> {
   const answers = async () => (await hyprsunsetTemperature()) !== null;
   if (await answers()) return true;
-  await dispatch("exec hyprsunset -i");
+  await dispatch(dsp.exec("hyprsunset -i"));
   for (let tries = 0; tries < 20; tries++) {
     await Bun.sleep(100);
     if (await answers()) return true;

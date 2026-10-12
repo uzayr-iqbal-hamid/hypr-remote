@@ -1,4 +1,4 @@
-import { dispatch, hyprJson, type Client, type Monitor } from "../hypr";
+import { dispatch, dsp, hyprJson, type Client, type Monitor } from "../hypr";
 
 export type Window = {
   address: string;
@@ -96,36 +96,35 @@ export function appName(windowClass: string): string {
 export async function switchWorkspace(id: number) {
   const active = await hyprJson<{ id: number }>("activeworkspace");
   if (active?.id === id) return;
-  await dispatch(`workspace ${id}`);
+  await dispatch(dsp.workspace(id));
 }
 
 export type WindowOp = "focus" | "close" | "fullscreen" | "float" | "kill";
 
 /** Addresses are validated as 0x-hex by the action schema before arriving here. */
 export async function windowCommand(op: WindowOp, address: string) {
-  const target = `address:${address}`;
   switch (op) {
     case "focus":
-      await dispatch(`focuswindow ${target}`);
+      await dispatch(dsp.focusWindow(address));
       break;
     // Asks politely, as the close button would: unsaved work gets a prompt.
     case "close":
-      await dispatch(`closewindow ${target}`);
+      await dispatch(dsp.closeWindow(address));
       break;
     // For frozen apps that ignore a polite close.
     case "kill":
-      await dispatch(`killwindow ${target}`);
+      await dispatch(dsp.killWindow(address));
       break;
     case "float":
-      await dispatch(`togglefloating ${target}`);
+      await dispatch(dsp.toggleFloating(address));
       break;
     // Hyprland's fullscreen only takes the focused window, so focus it first.
     case "fullscreen":
-      if (await dispatch(`focuswindow ${target}`)) await dispatch("fullscreen 0");
+      if (await dispatch(dsp.focusWindow(address))) await dispatch(dsp.fullscreen());
       break;
   }
 }
 
 export async function moveWindow(address: string, workspace: number) {
-  await dispatch(`movetoworkspacesilent ${workspace},address:${address}`);
+  await dispatch(dsp.moveWindow(address, workspace));
 }

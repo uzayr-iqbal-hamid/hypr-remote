@@ -1,4 +1,4 @@
-import { dispatch } from "../hypr";
+import { dispatch, dsp } from "../hypr";
 import { run } from "../run";
 
 /**
@@ -6,7 +6,7 @@ import { run } from "../run";
  * outlives this server and isn't killed if its service restarts.
  */
 export async function lockScreen() {
-  await dispatch("exec hyprlock");
+  await dispatch(dsp.exec("hyprlock"));
 }
 
 const SYSTEMCTL = { sleep: "suspend", restart: "reboot", "shut-down": "poweroff" } as const;
