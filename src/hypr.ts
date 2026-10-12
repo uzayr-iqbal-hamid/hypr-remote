@@ -119,10 +119,12 @@ let syntax: Syntax | null = null;
 export async function dispatch(call: Dispatcher): Promise<boolean> {
   try {
     syntax ??= syntaxOf(await hyprJson("status"));
-    let reply = await hyprRequest(`dispatch ${call[syntax]}`);
+    // Judged by what this call sent: another may switch `syntax` meanwhile.
+    const sent = syntax;
+    let reply = await hyprRequest(`dispatch ${call[sent]}`);
     // The config can change provider under a running server, on a full reload.
-    if (wrongSyntax(syntax, reply)) {
-      syntax = syntax === "legacy" ? "lua" : "legacy";
+    if (wrongSyntax(sent, reply)) {
+      syntax = sent === "legacy" ? "lua" : "legacy";
       reply = await hyprRequest(`dispatch ${call[syntax]}`);
     }
     return reply.trim() === "ok";
